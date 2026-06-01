@@ -44,7 +44,7 @@ export default function SignupPage() {
         join_date: formData.join_date ? new Date(formData.join_date).toISOString() : undefined,
       };
 
-      const response = await fetch("http://127.0.0.1:8000/api/user/register", {
+      const response = await fetch("http://127.0.0.1:8000/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

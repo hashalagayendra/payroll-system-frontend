@@ -1,15 +1,31 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "../../lib/axios";
-import { useAuthStore } from "../../store/useAuthStore";
+import { useLoggedUserDetails } from "../../store/useLoggedUserDetails";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore((state) => state.login);
+  const setUser = useLoggedUserDetails((state) => state.setUser);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axiosInstance.get("/api/auth/validate");
+        if (response.data.user) {
+          setUser(response.data.user);
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        // Not authenticated, stay on login page
+      }
+    };
+    checkAuth();
+  }, [setUser, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +39,7 @@ export default function LoginPage() {
       });
 
       if (response.data.user) {
-        login(response.data.user);
+        setUser(response.data.user);
         router.push("/dashboard"); // or wherever the successful login should redirect
       }
     } catch (err: any) {

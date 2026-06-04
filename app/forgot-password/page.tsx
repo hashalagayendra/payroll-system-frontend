@@ -1,4 +1,5 @@
 import React from "react";
+import { Users, ShieldCheck, BarChart3 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   return (
@@ -9,7 +10,7 @@ export default function ForgotPasswordPage() {
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossOrigin="anonymous"
       />
-      
+
       <style>{`
         /* Professional Custom CSS */
         .login-layout {
@@ -18,7 +19,9 @@ export default function ForgotPasswordPage() {
         }
         
         .hero-section {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: linear-gradient(rgba(30, 58, 138, 0.7), rgba(59, 130, 246, 0.7)), url('/loginBG.png');
+          background-size: cover;
+          background-position: right center;
           position: relative;
           overflow: hidden;
         }
@@ -85,52 +88,109 @@ export default function ForgotPasswordPage() {
 
       <div className="container-fluid login-layout p-0">
         <div className="row g-0 min-vh-100">
-          
           {/* Left Side: Professional Branding */}
           <div className="col-lg-5 col-xl-6 d-none d-lg-flex hero-section flex-column justify-content-center p-5">
             <div style={{ zIndex: 1 }} className="text-white p-4">
-              <h1 className="display-4 fw-bold mb-4">Enterprise Payroll</h1>
-              <p className="lead opacity-75 fw-light" style={{ maxWidth: '85%', lineHeight: '1.6' }}>
-                Streamline your payroll processing, manage employee benefits, and handle compliance automatically with our professional portal.
+              <h1 className="display-4 fw-bold mb-1">Source Code</h1>
+              <h1 className="display-4 fw-bold mb-4" style={{ color: '#60a5fa' }}>Payroll</h1>
+              <p
+                className="lead opacity-90 fw-light mb-5"
+                style={{ maxWidth: "85%", lineHeight: "1.6" }}
+              >
+                Streamline payroll processing, manage employee data, benefits, and ensure compliance with ease.
+                <br />
+                All in one secure platform.
               </p>
+
+              {/* Features List */}
+              <div className="d-flex flex-column gap-4" style={{ maxWidth: "85%" }}>
+                <div className="d-flex align-items-start gap-3">
+                  <div className="p-3 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "54px", height: "54px" }}>
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="fw-bold mb-1" style={{ fontSize: '1.1rem' }}>Employee Management</h5>
+                    <p className="text-white/80 mb-0" style={{ fontSize: '0.95rem' }}>Manage employee data, benefits, and payroll in one place.</p>
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-start gap-3">
+                  <div className="p-3 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "54px", height: "54px" }}>
+                    <ShieldCheck className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="fw-bold mb-1" style={{ fontSize: '1.1rem' }}>Compliance & Security</h5>
+                    <p className="text-white/80 mb-0" style={{ fontSize: '0.95rem' }}>Stay compliant and secure with industry-leading standards.</p>
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-start gap-3">
+                  <div className="p-3 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "54px", height: "54px" }}>
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="fw-bold mb-1" style={{ fontSize: '1.1rem' }}>Powerful Insights</h5>
+                    <p className="text-white/80 mb-0" style={{ fontSize: '0.95rem' }}>Get real-time reports and insights to drive better decisions.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Right Side: Professional Form */}
           <div className="col-lg-7 col-xl-6 d-flex align-items-center justify-content-center p-4">
             <div className="auth-form-container">
-              
               <div className="mb-5 text-center">
+                <img
+                  src="/logo.png"
+                  alt="Source Code Logo"
+                  style={{
+                    width: "128px",
+                    height: "128px",
+                    objectFit: "contain",
+                  }}
+                  className="mx-auto mb-3 rounded-3"
+                />
                 <h2 className="fw-bold mb-2 text-dark">Reset Password</h2>
-                <p className="text-muted">Enter your email address and we'll send you a link to reset your password.</p>
+                <p className="text-muted">
+                  Enter your email address and we'll send you a link to reset
+                  your password.
+                </p>
               </div>
 
               <form>
                 <div className="mb-4">
-                  <label htmlFor="email" className="custom-label">Work Email</label>
-                  <input 
-                    type="email" 
-                    className="form-control custom-input" 
-                    id="email" 
-                    placeholder="name@company.com" 
+                  <label htmlFor="email" className="custom-label">
+                    Work Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control custom-input"
+                    id="email"
+                    placeholder="name@company.com"
                   />
                 </div>
 
                 <button className="btn btn-pro w-100 mb-4" type="submit">
                   Send Reset Link
                 </button>
-                
-                <p className="text-center text-muted mb-0" style={{ fontSize: '0.95rem' }}>
-                  Remember your password?{' '}
-                  <a href="/login" className="text-decoration-none fw-semibold" style={{ color: '#3b82f6' }}>
+
+                <p
+                  className="text-center text-muted mb-0"
+                  style={{ fontSize: "0.95rem" }}
+                >
+                  Remember your password?{" "}
+                  <a
+                    href="/login"
+                    className="text-decoration-none fw-semibold"
+                    style={{ color: "#3b82f6" }}
+                  >
                     Back to login
                   </a>
                 </p>
               </form>
-
             </div>
           </div>
-          
         </div>
       </div>
     </>

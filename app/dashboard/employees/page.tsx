@@ -1,75 +1,83 @@
-import React from "react";
-import { Search, Filter, Plus, Edit2, Trash2, Eye } from "lucide-react";
+"use client";
 
-const DUMMY_EMPLOYEES = [
-  {
-    id: 1,
-    code: "EMP-001",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 234-567-8900",
-    department: "Engineering",
-    designation: "Senior Developer",
-    branch: "New York",
-    type: "FULL_TIME",
-    status: "ACTIVE",
-    joinDate: "2022-01-15",
-  },
-  {
-    id: 2,
-    code: "EMP-002",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "+1 234-567-8901",
-    department: "HR",
-    designation: "HR Manager",
-    branch: "London",
-    type: "FULL_TIME",
-    status: "ACTIVE",
-    joinDate: "2021-11-01",
-  },
-  {
-    id: 3,
-    code: "EMP-003",
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+1 234-567-8902",
-    department: "Marketing",
-    designation: "Content Writer",
-    branch: "New York",
-    type: "CONTRACT",
-    status: "ACTIVE",
-    joinDate: "2023-03-10",
-  },
-  {
-    id: 4,
-    code: "EMP-004",
-    name: "Sarah Williams",
-    email: "sarah@example.com",
-    phone: "+1 234-567-8903",
-    department: "Sales",
-    designation: "Sales Rep",
-    branch: "Chicago",
-    type: "FULL_TIME",
-    status: "RESIGNED",
-    joinDate: "2020-05-20",
-  },
-  {
-    id: 5,
-    code: "EMP-005",
-    name: "David Brown",
-    email: "david@example.com",
-    phone: "+1 234-567-8904",
-    department: "Engineering",
-    designation: "DevOps Engineer",
-    branch: "London",
-    type: "FULL_TIME",
-    status: "ACTIVE",
-    joinDate: "2022-08-12",
-  },
-];
+import React, { useEffect, useState, useMemo } from "react";
+import { Search, Filter, Plus, Edit2, Trash2, Eye } from "lucide-react";
+import axiosInstance from "@/lib/axios";
+import { Employee, EmployeeResponse } from "../../../types/employee";
+import EmployeeDetailsModal from "./components/EmployeeDetailsModal";
 
 export default function AllEmployeesPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Modal states
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("All Branches");
+  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
+  const [selectedStatus, setSelectedStatus] = useState("All Statuses");
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        const response =
+          await axiosInstance.get<EmployeeResponse>("/api/employees");
+        if (response.data.success) {
+          setEmployees(response.data.data);
+        } else {
+          setError("Failed to fetch employees.");
+        }
+      } catch (err: any) {
+        setError(
+          err.response?.data?.message || err.message || "An error occurred",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  // Compute unique filter options dynamically from data
+  const branches = useMemo(() => {
+    const uniqueBranches = new Set(employees.map(emp => emp.branch?.name).filter(Boolean));
+    return ["All Branches", ...Array.from(uniqueBranches)];
+  }, [employees]);
+
+  const departments = useMemo(() => {
+    const uniqueDepartments = new Set(employees.map(emp => emp.department?.name).filter(Boolean));
+    return ["All Departments", ...Array.from(uniqueDepartments)];
+  }, [employees]);
+
+  const statuses = useMemo(() => {
+    const uniqueStatuses = new Set(employees.map(emp => emp.status).filter(Boolean));
+    return ["All Statuses", ...Array.from(uniqueStatuses)];
+  }, [employees]);
+
+  // Apply filters
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      // Search logic (name or code)
+      const matchesSearch =
+        searchQuery === "" ||
+        `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.employee_code.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Dropdown logic
+      const matchesBranch = selectedBranch === "All Branches" || emp.branch?.name === selectedBranch;
+      const matchesDepartment = selectedDepartment === "All Departments" || emp.department?.name === selectedDepartment;
+      const matchesStatus = selectedStatus === "All Statuses" || emp.status === selectedStatus;
+
+      return matchesSearch && matchesBranch && matchesDepartment && matchesStatus;
+    });
+  }, [employees, searchQuery, selectedBranch, selectedDepartment, selectedStatus]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Section */}
@@ -95,29 +103,49 @@ export default function AllEmployeesPage() {
           <input
             type="text"
             placeholder="Search by name or code..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer">
-            <option>All Branches</option>
-            <option>New York</option>
-            <option>London</option>
-            <option>Chicago</option>
+          <select 
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+          >
+            {branches.map(branch => (
+              <option key={branch as string} value={branch as string}>{branch as string}</option>
+            ))}
           </select>
-          <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer">
-            <option>All Departments</option>
-            <option>Engineering</option>
-            <option>HR</option>
-            <option>Marketing</option>
+          <select 
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
+            value={selectedDepartment}
+            onChange={(e) => setSelectedDepartment(e.target.value)}
+          >
+            {departments.map(dept => (
+              <option key={dept as string} value={dept as string}>{dept as string}</option>
+            ))}
           </select>
-          <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer">
-            <option>All Statuses</option>
-            <option>ACTIVE</option>
-            <option>RESIGNED</option>
-            <option>TERMINATED</option>
+          <select 
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+          >
+            {statuses.map(status => (
+              <option key={status as string} value={status as string}>{status as string}</option>
+            ))}
           </select>
-          <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors">
+          <button 
+            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedBranch("All Branches");
+              setSelectedDepartment("All Departments");
+              setSelectedStatus("All Statuses");
+            }}
+            title="Clear filters"
+          >
             <Filter className="w-4 h-4" />
           </button>
         </div>
@@ -125,109 +153,142 @@ export default function AllEmployeesPage() {
 
       {/* Table Section */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                <th className="px-4 py-3">Employee</th>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Role & Dept</th>
-                <th className="px-4 py-3">Branch</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {DUMMY_EMPLOYEES.map((emp) => (
-                <tr
-                  key={emp.id}
-                  className="hover:bg-slate-50 transition-colors group"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
-                        {emp.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">
-                          {emp.name}
-                        </p>
-                        <p className="text-xs text-slate-500">{emp.code}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-slate-700">{emp.email}</p>
-                    <p className="text-xs text-slate-500">{emp.phone}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-slate-700 font-medium">
-                      {emp.designation}
-                    </p>
-                    <p className="text-xs text-slate-500">{emp.department}</p>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{emp.branch}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium tracking-wide">
-                      {emp.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded text-xs font-semibold tracking-wide ${
-                        emp.status === "ACTIVE"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : emp.status === "RESIGNED"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {emp.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
-          <span>
-            Showing 1 to {DUMMY_EMPLOYEES.length} of {DUMMY_EMPLOYEES.length}{" "}
-            entries
-          </span>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
-              Prev
-            </button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
-              Next
-            </button>
+        {loading ? (
+          <div className="p-8 text-center text-slate-500">
+            Loading employees...
           </div>
-        </div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : filteredEmployees.length === 0 ? (
+          <div className="p-8 text-center text-slate-500">
+            No employees found matching your filters.
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                    <th className="px-4 py-3">Employee</th>
+                    <th className="px-4 py-3">Contact</th>
+                    <th className="px-4 py-3">Role & Dept</th>
+                    <th className="px-4 py-3">Branch</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredEmployees.map((emp) => (
+                    <tr
+                      key={emp.id}
+                      className="hover:bg-slate-50 transition-colors group cursor-pointer"
+                      onClick={() => {
+                        setSelectedEmployee(emp);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+                            {emp.first_name?.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-800">
+                              {emp.first_name} {emp.last_name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {emp.employee_code}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-slate-700">{emp.email}</p>
+                        <p className="text-xs text-slate-500">{emp.phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-slate-700 font-medium">
+                          {emp.designation?.title || "N/A"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {emp.department?.name || "N/A"}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {emp.branch?.name || "N/A"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium tracking-wide">
+                          {emp.employment_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex px-2 py-1 rounded text-xs font-semibold tracking-wide ${
+                            emp.status === "ACTIVE"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : emp.status === "RESIGNED"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {emp.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                            title="Edit"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
+              <span>
+                Showing 1 to {filteredEmployees.length} of {filteredEmployees.length} entries
+              </span>
+              <div className="flex gap-1">
+                <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
+                  Prev
+                </button>
+                <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
+      {selectedEmployee && (
+        <EmployeeDetailsModal
+          employee={selectedEmployee}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

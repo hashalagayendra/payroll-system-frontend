@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Users, ShieldCheck, BarChart3 } from "lucide-react";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +32,7 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
@@ -41,27 +42,32 @@ export default function SignupPage() {
       const payload = {
         ...formData,
         dob: formData.dob ? new Date(formData.dob).toISOString() : undefined,
-        join_date: formData.join_date ? new Date(formData.join_date).toISOString() : undefined,
+        join_date: formData.join_date
+          ? new Date(formData.join_date).toISOString()
+          : undefined,
       };
 
       const response = await fetch("http://127.0.0.1:8000/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Registration failed. Please try again.");
+        throw new Error(
+          errorData.message || "Registration failed. Please try again.",
+        );
       }
 
       setSuccessMsg("Employee registered successfully!");
-      
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred while connecting to the server.");
+      setErrorMsg(
+        err.message || "An error occurred while connecting to the server.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +90,9 @@ export default function SignupPage() {
         }
         
         .brand-panel {
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          background: linear-gradient(rgba(30, 58, 138, 0.7), rgba(59, 130, 246, 0.7)), url('/loginBG.png');
+          background-size: cover;
+          background-position: right center;
           position: relative;
           color: white;
           overflow: hidden;
@@ -173,16 +181,55 @@ export default function SignupPage() {
         <div className="row g-0 h-100">
           {/* Left Side: Professional Branding */}
           <div className="col-lg-4 col-xl-3 d-none d-lg-flex brand-panel flex-column p-5">
-            <div style={{ zIndex: 1 }}>
-              <h2 className="fw-bold mb-4">Enterprise Payroll</h2>
+            <div style={{ zIndex: 1 }} className="text-white">
+              <div className="d-flex align-items-center mb-4">
+                <img
+                  src="/logo.png"
+                  alt="Source Code Logo"
+                  style={{ width: "48px", height: "48px", objectFit: "contain" }}
+                  className="rounded-3 me-3 bg-white p-1"
+                />
+                <h4 className="fw-bold m-0">Source Code Payroll</h4>
+              </div>
               <p
-                className="opacity-75"
-                style={{ lineHeight: "1.7", fontSize: "1.05rem" }}
+                className="opacity-90 fw-light mb-4"
+                style={{ lineHeight: "1.6", fontSize: "0.95rem" }}
               >
-                Join our platform to manage your workforce efficiently. Fill out
-                the registration form to create a new employee profile in our
-                highly secure system.
+                Streamline payroll processing, manage employee data, benefits, and ensure compliance with ease. All in one secure platform.
               </p>
+
+              {/* Features List */}
+              <div className="d-flex flex-column gap-3 mb-4">
+                <div className="d-flex align-items-start gap-2">
+                  <div className="p-2 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "40px", height: "40px", flexShrink: 0 }}>
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h6 className="fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Employee Management</h6>
+                    <p className="text-white/70 mb-0" style={{ fontSize: '0.8rem' }}>Manage employee data, benefits, and payroll in one place.</p>
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-start gap-2">
+                  <div className="p-2 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "40px", height: "40px", flexShrink: 0 }}>
+                    <ShieldCheck className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h6 className="fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Compliance & Security</h6>
+                    <p className="text-white/70 mb-0" style={{ fontSize: '0.8rem' }}>Stay compliant and secure with industry-leading standards.</p>
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-start gap-2">
+                  <div className="p-2 bg-white/10 rounded-3 border border-white/15 d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)', width: "40px", height: "40px", flexShrink: 0 }}>
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h6 className="fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Powerful Insights</h6>
+                    <p className="text-white/70 mb-0" style={{ fontSize: '0.8rem' }}>Get real-time reports and insights to drive better decisions.</p>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="mt-auto" style={{ zIndex: 1 }}>
               <p className="mb-0" style={{ fontSize: "0.95rem" }}>
@@ -204,6 +251,14 @@ export default function SignupPage() {
               style={{ maxWidth: "1000px" }}
             >
               <div className="mb-4">
+                <div className="mb-3">
+                  <img
+                    src="/logo.png"
+                    alt="Source Code Logo"
+                    style={{ width: "128px", height: "128px", objectFit: "contain" }}
+                    className="rounded-3"
+                  />
+                </div>
                 <h1 className="fw-bold text-dark mb-2">
                   Employee Registration
                 </h1>
@@ -211,8 +266,22 @@ export default function SignupPage() {
                   Please provide accurate information for the new employee
                   profile.
                 </p>
-                {errorMsg && <div className="alert alert-danger py-2 mt-3 mb-0" style={{ fontSize: "0.9rem" }}>{errorMsg}</div>}
-                {successMsg && <div className="alert alert-success py-2 mt-3 mb-0" style={{ fontSize: "0.9rem" }}>{successMsg}</div>}
+                {errorMsg && (
+                  <div
+                    className="alert alert-danger py-2 mt-3 mb-0"
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    {errorMsg}
+                  </div>
+                )}
+                {successMsg && (
+                  <div
+                    className="alert alert-success py-2 mt-3 mb-0"
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    {successMsg}
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -442,7 +511,11 @@ export default function SignupPage() {
                       &larr; Back to Login
                     </a>
                   </div>
-                  <button type="submit" className="btn btn-pro ms-auto" disabled={isLoading}>
+                  <button
+                    type="submit"
+                    className="btn btn-pro ms-auto"
+                    disabled={isLoading}
+                  >
                     {isLoading ? "Registering..." : "Register Employee"}
                   </button>
                 </div>

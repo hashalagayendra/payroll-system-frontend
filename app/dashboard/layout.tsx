@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useLoggedUserDetails } from "../../store/useLoggedUserDetails";
 import axiosInstance from "../../lib/axios";
 import {
@@ -212,11 +213,15 @@ export default function DashboardLayout({
       <aside className="w-72 bg-slate-900 text-white shadow-xl hidden md:flex flex-col z-10 relative">
         {/* Brand Area */}
         <div className="h-16 flex items-center px-6 border-b border-slate-800  shrink-0">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-blue-500/20 shrink-0">
-            <LayoutDashboard className="w-5 h-5 text-white" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={44}
+            height={44}
+            className="rounded-lg mr-3 object-contain shrink-0"
+          />
           <h1 className="text-xl font-bold tracking-wide truncate">
-            Enterprise
+            Source Code
           </h1>
         </div>
 
@@ -253,11 +258,15 @@ export default function DashboardLayout({
         {/* Top Navigation */}
         {/* <nav className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
           <div className="md:hidden flex items-center">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3 shadow-sm shrink-0">
-              <LayoutDashboard className="w-5 h-5 text-white" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={44}
+              height={44}
+              className="rounded-lg mr-3 object-contain shrink-0"
+            />
             <h1 className="text-xl font-bold text-slate-800 truncate">
-              Enterprise
+              Source Code
             </h1>
           </div>
           <div className="flex-1"></div>
@@ -273,7 +282,7 @@ export default function DashboardLayout({
         </nav> */}
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-scroll h-full max-h-dvh">
           {children}
         </main>
       </div>

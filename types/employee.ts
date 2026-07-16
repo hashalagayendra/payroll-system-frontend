@@ -21,6 +21,62 @@ export interface Designation {
   level: string;
 }
 
+export interface EmployeeBankDetail {
+  id: number;
+  employee_id: number;
+  bank_name: string | null;
+  account_number: string | null;
+  branch_name: string | null;
+  swift_code: string | null;
+}
+
+export interface SalaryStructure {
+  id: number;
+  designation_id: number;
+  basic_salary: string | null;
+  overtime_rate: string | null;
+  allowance_default: string | null;
+  created_at: string | null;
+}
+
+export interface EmployeeSalary {
+  id: number;
+  employee_id: number;
+  salary_structure_id: number;
+  basic_salary_override: string | null;
+  effective_from: string | null;
+  effective_to: string | null;
+  created_at: string | null;
+  salary_structure?: SalaryStructure;
+}
+
+export interface EmployeeDocument {
+  id: number;
+  employee_id: number;
+  type: string | null;
+  file_url: string | null;
+  created_at: string | null;
+}
+
+export interface Project {
+  id: number;
+  name: string | null;
+  client_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  status: string | null;
+  billing_type: string | null;
+  created_at: string | null;
+}
+
+export interface ProjectAssignment {
+  id: number;
+  project_id: number;
+  employee_id: number;
+  role: string | null;
+  project?: Project;
+}
+
 export interface Employee {
   id: number;
   employee_code: string;
@@ -44,6 +100,12 @@ export interface Employee {
   department: Department;
   designation: Designation;
   reporting_manager: Employee | null;
+  
+  // Extra detailed fields loaded conditionally
+  bank_detail?: EmployeeBankDetail;
+  salary?: EmployeeSalary;
+  documents?: EmployeeDocument[];
+  project_assignments?: ProjectAssignment[];
 }
 
 export interface PaginatedData<T> {

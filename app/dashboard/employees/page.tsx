@@ -1,62 +1,88 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Search, Filter, Plus, Edit2, Trash2, Eye } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { Employee, EmployeeResponse } from "../../../types/employee";
 import EmployeeDetailsModal from "./components/EmployeeDetailsModal";
+import AddEmployeeModal from "./components/AddEmployeeModal";
+import EditEmployeeModal from "./components/EditEmployeeModal";
+import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 
 export default function AllEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const perPage = 15;
 
   // Modal states
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("All Branches");
-  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
+  const [selectedDepartment, setSelectedDepartment] =
+    useState("All Departments");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true);
-        const response =
-          await axiosInstance.get<EmployeeResponse>("/api/employees");
-        if (response.data.success) {
-          setEmployees(response.data.data);
-        } else {
-          setError("Failed to fetch employees.");
-        }
-      } catch (err: any) {
-        setError(
-          err.response?.data?.message || err.message || "An error occurred",
-        );
-      } finally {
-        setLoading(false);
+  const fetchEmployees = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const response =
+        await axiosInstance.get<EmployeeResponse>(`/api/employees?page=${page}&per_page=${perPage}`);
+      if (response.data.success) {
+        setEmployees(response.data.data.data);
+        setCurrentPage(response.data.data.current_page);
+        setTotalPages(response.data.data.last_page);
+        setTotalEntries(response.data.data.total);
+      } else {
+        setError("Failed to fetch employees.");
       }
-    };
-
-    fetchEmployees();
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || err.message || "An error occurred",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchEmployees(currentPage);
+  }, [fetchEmployees, currentPage]);
 
   // Compute unique filter options dynamically from data
   const branches = useMemo(() => {
-    const uniqueBranches = new Set(employees.map(emp => emp.branch?.name).filter(Boolean));
+    const uniqueBranches = new Set(
+      employees.map((emp) => emp.branch?.name).filter(Boolean),
+    );
     return ["All Branches", ...Array.from(uniqueBranches)];
   }, [employees]);
 
   const departments = useMemo(() => {
-    const uniqueDepartments = new Set(employees.map(emp => emp.department?.name).filter(Boolean));
+    const uniqueDepartments = new Set(
+      employees.map((emp) => emp.department?.name).filter(Boolean),
+    );
     return ["All Departments", ...Array.from(uniqueDepartments)];
   }, [employees]);
 
   const statuses = useMemo(() => {
-    const uniqueStatuses = new Set(employees.map(emp => emp.status).filter(Boolean));
+    const uniqueStatuses = new Set(
+      employees.map((emp) => emp.status).filter(Boolean),
+    );
     return ["All Statuses", ...Array.from(uniqueStatuses)];
   }, [employees]);
 
@@ -66,17 +92,32 @@ export default function AllEmployeesPage() {
       // Search logic (name or code)
       const matchesSearch =
         searchQuery === "" ||
-        `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        `${emp.first_name} ${emp.last_name}`
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
         emp.employee_code.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Dropdown logic
-      const matchesBranch = selectedBranch === "All Branches" || emp.branch?.name === selectedBranch;
-      const matchesDepartment = selectedDepartment === "All Departments" || emp.department?.name === selectedDepartment;
-      const matchesStatus = selectedStatus === "All Statuses" || emp.status === selectedStatus;
+      const matchesBranch =
+        selectedBranch === "All Branches" ||
+        emp.branch?.name === selectedBranch;
+      const matchesDepartment =
+        selectedDepartment === "All Departments" ||
+        emp.department?.name === selectedDepartment;
+      const matchesStatus =
+        selectedStatus === "All Statuses" || emp.status === selectedStatus;
 
-      return matchesSearch && matchesBranch && matchesDepartment && matchesStatus;
+      return (
+        matchesSearch && matchesBranch && matchesDepartment && matchesStatus
+      );
     });
-  }, [employees, searchQuery, selectedBranch, selectedDepartment, selectedStatus]);
+  }, [
+    employees,
+    searchQuery,
+    selectedBranch,
+    selectedDepartment,
+    selectedStatus,
+  ]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -90,7 +131,10 @@ export default function AllEmployeesPage() {
             Manage your workforce, view details, and update statuses.
           </p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Employee
         </button>
@@ -109,34 +153,40 @@ export default function AllEmployeesPage() {
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <select 
+          <select
             className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
           >
-            {branches.map(branch => (
-              <option key={branch as string} value={branch as string}>{branch as string}</option>
+            {branches.map((branch) => (
+              <option key={branch as string} value={branch as string}>
+                {branch as string}
+              </option>
             ))}
           </select>
-          <select 
+          <select
             className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
           >
-            {departments.map(dept => (
-              <option key={dept as string} value={dept as string}>{dept as string}</option>
+            {departments.map((dept) => (
+              <option key={dept as string} value={dept as string}>
+                {dept as string}
+              </option>
             ))}
           </select>
-          <select 
+          <select
             className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 focus:outline-none cursor-pointer"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
           >
-            {statuses.map(status => (
-              <option key={status as string} value={status as string}>{status as string}</option>
+            {statuses.map((status) => (
+              <option key={status as string} value={status as string}>
+                {status as string}
+              </option>
             ))}
           </select>
-          <button 
+          <button
             className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors"
             onClick={() => {
               setSearchQuery("");
@@ -247,14 +297,22 @@ export default function AllEmployeesPage() {
                           <button
                             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
                             title="Edit"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmployeeToEdit(emp);
+                              setIsEditModalOpen(true);
+                            }}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Delete"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmployeeToDelete(emp);
+                              setIsDeleteModalOpen(true);
+                            }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -267,13 +325,22 @@ export default function AllEmployeesPage() {
             </div>
             <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
               <span>
-                Showing 1 to {filteredEmployees.length} of {filteredEmployees.length} entries
+                Showing {filteredEmployees.length > 0 ? (currentPage - 1) * perPage + 1 : 0} to {Math.min(currentPage * perPage, totalEntries)} of{" "}
+                {totalEntries} entries
               </span>
               <div className="flex gap-1">
-                <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50"
+                >
                   Prev
                 </button>
-                <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50"
+                >
                   Next
                 </button>
               </div>
@@ -287,6 +354,30 @@ export default function AllEmployeesPage() {
           employee={selectedEmployee}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      <AddEmployeeModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchEmployees}
+      />
+
+      {employeeToEdit && (
+        <EditEmployeeModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={fetchEmployees}
+          employee={employeeToEdit}
+        />
+      )}
+
+      {employeeToDelete && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onSuccess={fetchEmployees}
+          employee={employeeToDelete}
         />
       )}
     </div>

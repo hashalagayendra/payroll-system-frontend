@@ -130,3 +130,15 @@ export interface EmployeeResponse {
   success: boolean;
   data: PaginatedData<Employee>;
 }
+
+export interface Attendance {
+  id: number;
+  employee_id: number;
+  date: string;
+  check_in: string | null;
+  check_out: string | null;
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY';
+  created_at: string;
+  updated_at: string;
+  employee?: Employee;
+}

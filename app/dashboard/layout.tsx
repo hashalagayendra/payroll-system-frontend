@@ -41,7 +41,14 @@ const NAV_LINKS: NavLink[] = [
       { name: "Bank Details", href: "/dashboard/employees/bank-details" },
     ],
   },
-  { name: "Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
+  {
+    name: "Attendance",
+    icon: CalendarCheck,
+    subItems: [
+      { name: "Daily Attendance", href: "/dashboard/attendance" },
+      { name: "Monthly Analytics", href: "/dashboard/attendance/summary" },
+    ],
+  },
   { name: "Timesheets", href: "/dashboard/timesheets", icon: Clock },
   { name: "Projects", href: "/dashboard/projects", icon: Briefcase },
   {

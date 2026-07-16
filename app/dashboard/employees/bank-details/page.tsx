@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Plus, Edit2, Trash2, Building, Loader2, FileText, Filter } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { EmployeeBankDetail, Employee } from "../../../../types/employee";
+import AddBankDetailModal from "./components/AddBankDetailModal";
 
 interface BankDetailsResponse {
   success: boolean;
@@ -29,6 +30,9 @@ export default function BankDetailsPage() {
 
   // Filter state
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+
+  // Modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -90,7 +94,10 @@ export default function BankDetailsPage() {
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bank Details</h1>
           <p className="text-sm text-slate-500 mt-1">Manage employee bank accounts for payroll processing.</p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Bank Details
         </button>
@@ -230,6 +237,12 @@ export default function BankDetailsPage() {
           </>
         )}
       </div>
+
+      <AddBankDetailModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSuccess={() => fetchBankDetails(currentPage, selectedEmployeeId)} 
+      />
     </div>
   );
 }

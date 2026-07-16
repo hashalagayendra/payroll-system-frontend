@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Search, Upload, Eye, Trash2, FileText, Download, Loader2, Filter } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { EmployeeDocument } from "../../../../types/employee";
+import UploadDocumentModal from "./components/UploadDocumentModal";
 
 interface DocumentResponse {
   success: boolean;
@@ -20,6 +21,8 @@ export default function EmployeeDocumentsPage() {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,7 +88,10 @@ export default function EmployeeDocumentsPage() {
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Employee Documents</h1>
           <p className="text-sm text-slate-500 mt-1">Manage and securely store all employee-related files.</p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+        <button 
+          onClick={() => setIsUploadModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+        >
           <Upload className="w-4 h-4 mr-2" />
           Upload Document
         </button>
@@ -173,8 +179,28 @@ export default function EmployeeDocumentsPage() {
                             <FileText className="w-5 h-5" />
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-800 block">{doc.type || "Document"}</span>
-                            {doc.file_url && <span className="text-xs text-blue-600 truncate max-w-[150px] inline-block">{doc.file_url.split('/').pop()}</span>}
+                            {doc.file_url ? (
+                              <a 
+                                href={doc.file_url} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="font-semibold text-slate-800 hover:text-indigo-600 hover:underline block"
+                              >
+                                {doc.type || "Document"}
+                              </a>
+                            ) : (
+                              <span className="font-semibold text-slate-800 block">{doc.type || "Document"}</span>
+                            )}
+                            {doc.file_url && (
+                              <a 
+                                href={doc.file_url} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="text-xs text-blue-600 hover:underline truncate max-w-[150px] inline-block"
+                              >
+                                {doc.file_url.split('/').pop()}
+                              </a>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -243,6 +269,12 @@ export default function EmployeeDocumentsPage() {
           </>
         )}
       </div>
+
+      <UploadDocumentModal 
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={() => fetchDocuments(currentPage, searchQuery, selectedType)}
+      />
     </div>
   );
 }

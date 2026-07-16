@@ -5,6 +5,7 @@ import { Search, Upload, Eye, Trash2, FileText, Download, Loader2, Filter } from
 import axiosInstance from "@/lib/axios";
 import { EmployeeDocument } from "../../../../types/employee";
 import UploadDocumentModal from "./components/UploadDocumentModal";
+import ConfirmDeleteDocModal from "./components/ConfirmDeleteDocModal";
 
 interface DocumentResponse {
   success: boolean;
@@ -23,6 +24,8 @@ export default function EmployeeDocumentsPage() {
   const [error, setError] = useState<string | null>(null);
   
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<EmployeeDocument | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -233,9 +236,17 @@ export default function EmployeeDocumentsPage() {
                               <Download className="w-4 h-4" />
                             </a>
                           )}
-                          <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                           <button 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setDocumentToDelete(doc);
+                               setIsDeleteModalOpen(true);
+                             }}
+                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" 
+                             title="Delete"
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </button>
                         </div>
                       </td>
                     </tr>
@@ -275,6 +286,15 @@ export default function EmployeeDocumentsPage() {
         onClose={() => setIsUploadModalOpen(false)}
         onSuccess={() => fetchDocuments(currentPage, searchQuery, selectedType)}
       />
+
+      {documentToDelete && (
+        <ConfirmDeleteDocModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onSuccess={() => fetchDocuments(currentPage, searchQuery, selectedType)}
+          document={documentToDelete}
+        />
+      )}
     </div>
   );
 }

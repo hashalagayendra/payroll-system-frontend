@@ -47,7 +47,15 @@ export default function UploadDocumentModal({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError("File size cannot exceed 10MB.");
+        setFile(null);
+        e.target.value = "";
+      } else {
+        setFile(selectedFile);
+        setError(null);
+      }
     }
   };
 

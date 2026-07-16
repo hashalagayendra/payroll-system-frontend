@@ -26,8 +26,10 @@ export interface EmployeeBankDetail {
   employee_id: number;
   bank_name: string | null;
   account_number: string | null;
+  masked_account_number?: string | null;
   branch_name: string | null;
   swift_code: string | null;
+  employee?: Employee;
 }
 
 export interface SalaryStructure {

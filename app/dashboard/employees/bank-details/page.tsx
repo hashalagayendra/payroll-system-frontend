@@ -5,6 +5,8 @@ import { Plus, Edit2, Trash2, Building, Loader2, FileText, Filter } from "lucide
 import axiosInstance from "@/lib/axios";
 import { EmployeeBankDetail, Employee } from "../../../../types/employee";
 import AddBankDetailModal from "./components/AddBankDetailModal";
+import EditBankDetailModal from "./components/EditBankDetailModal";
+import ConfirmDeleteBankDetailModal from "./components/ConfirmDeleteBankDetailModal";
 
 interface BankDetailsResponse {
   success: boolean;
@@ -33,6 +35,10 @@ export default function BankDetailsPage() {
 
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [bankDetailToEdit, setBankDetailToEdit] = useState<EmployeeBankDetail | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [bankDetailToDelete, setBankDetailToDelete] = useState<EmployeeBankDetail | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -197,10 +203,24 @@ export default function BankDetailsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors" title="Edit">
+                          <button 
+                            onClick={() => {
+                              setBankDetailToEdit(bank);
+                              setIsEditModalOpen(true);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors" 
+                            title="Edit"
+                          >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                          <button 
+                            onClick={() => {
+                              setBankDetailToDelete(bank);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" 
+                            title="Delete"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -243,6 +263,22 @@ export default function BankDetailsPage() {
         onClose={() => setIsAddModalOpen(false)} 
         onSuccess={() => fetchBankDetails(currentPage, selectedEmployeeId)} 
       />
+
+      <EditBankDetailModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        onSuccess={() => fetchBankDetails(currentPage, selectedEmployeeId)} 
+        bankDetail={bankDetailToEdit}
+      />
+
+      {bankDetailToDelete && (
+        <ConfirmDeleteBankDetailModal 
+          isOpen={isDeleteModalOpen} 
+          onClose={() => setIsDeleteModalOpen(false)} 
+          onSuccess={() => fetchBankDetails(currentPage, selectedEmployeeId)} 
+          bankDetail={bankDetailToDelete}
+        />
+      )}
     </div>
   );
 }

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { X, Loader2, AlertCircle, Save } from "lucide-react";
 import axiosInstance from "@/lib/axios";
+import { EmployeeBankDetail } from "../../../../../types/employee";
 
-interface AddBankDetailModalProps {
+interface EditBankDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  bankDetail: EmployeeBankDetail | null;
 }
 
-export default function AddBankDetailModal({
+export default function EditBankDetailModal({
   isOpen,
   onClose,
   onSuccess,
-}: AddBankDetailModalProps) {
+  bankDetail,
+}: EditBankDetailModalProps) {
   const [employees, setEmployees] = useState<any[]>([]);
   const [employeeId, setEmployeeId] = useState("");
   const [bankName, setBankName] = useState("");
@@ -27,15 +30,16 @@ export default function AddBankDetailModal({
   useEffect(() => {
     if (isOpen) {
       fetchEmployees();
-      // Reset form
-      setEmployeeId("");
-      setBankName("");
-      setAccountNumber("");
-      setBranchName("");
-      setSwiftCode("");
+      if (bankDetail) {
+        setEmployeeId(bankDetail.employee_id.toString());
+        setBankName(bankDetail.bank_name || "");
+        setAccountNumber(bankDetail.account_number || "");
+        setBranchName(bankDetail.branch_name || "");
+        setSwiftCode(bankDetail.swift_code || "");
+      }
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, bankDetail]);
 
   const fetchEmployees = async () => {
     try {
@@ -51,6 +55,8 @@ export default function AddBankDetailModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!bankDetail) return;
+    
     if (!employeeId || !bankName || !accountNumber || !branchName || !swiftCode) {
       setError("Please fill in all required fields.");
       return;
@@ -68,16 +74,16 @@ export default function AddBankDetailModal({
     };
 
     try {
-      const response = await axiosInstance.post("/api/employee-bank-details", payload);
+      const response = await axiosInstance.put(`/api/employee-bank-details/${bankDetail.id}`, payload);
 
       if (response.data.success) {
         onSuccess();
         onClose();
       } else {
-        setError(response.data.message || "Failed to add bank details.");
+        setError(response.data.message || "Failed to update bank details.");
       }
     } catch (err: any) {
-      console.error("Failed to add bank details:", err);
+      console.error("Failed to update bank details:", err);
       if (err.response?.data?.errors) {
         const validationErrors = Object.values(err.response.data.errors).flat().join(" ");
         setError(validationErrors);
@@ -97,7 +103,7 @@ export default function AddBankDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-950">
-            Add Bank Details
+            Edit Bank Details
           </h2>
           <button
             onClick={onClose}
@@ -116,7 +122,7 @@ export default function AddBankDetailModal({
             </div>
           )}
 
-          <form id="add-bank-detail-form" onSubmit={handleSubmit} className="space-y-5">
+          <form id="edit-bank-detail-form" onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1">
                 Employee <span className="text-red-500">*</span>
@@ -163,6 +169,7 @@ export default function AddBankDetailModal({
                 onChange={(e) => setAccountNumber(e.target.value)}
                 placeholder="e.g. 1234567890"
               />
+              <p className="text-xs text-slate-500 mt-1">Leave as is if you do not want to change it. Unmasked data is shown here.</p>
             </div>
 
             <div>
@@ -206,7 +213,7 @@ export default function AddBankDetailModal({
           </button>
           <button
             type="submit"
-            form="add-bank-detail-form"
+            form="edit-bank-detail-form"
             disabled={loading}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -218,7 +225,7 @@ export default function AddBankDetailModal({
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Details
+                Save Changes
               </>
             )}
           </button>

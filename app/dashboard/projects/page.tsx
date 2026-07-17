@@ -164,13 +164,20 @@ export default function ProjectsPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (projectToDelete) {
-      // Typically you'd call axios.delete here, but updating local state for now
-      setProjects(projects.filter(p => p.id !== projectToDelete.id));
-      setIsDeleteModalOpen(false);
-      if (selectedProject?.id === projectToDelete.id) {
-        setIsPanelOpen(false);
+      try {
+        const response = await axiosInstance.delete(`/api/projects/${projectToDelete.id}`);
+        if (response.data.success) {
+          setProjects(projects.filter(p => p.id !== projectToDelete.id));
+          setIsDeleteModalOpen(false);
+          if (selectedProject?.id === projectToDelete.id) {
+            setIsPanelOpen(false);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to delete project:", error);
+        alert("Failed to delete project.");
       }
     }
   };

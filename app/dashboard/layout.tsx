@@ -50,7 +50,14 @@ const NAV_LINKS: NavLink[] = [
     ],
   },
   { name: "Timesheets", href: "/dashboard/timesheets", icon: Clock },
-  { name: "Projects", href: "/dashboard/projects", icon: Briefcase },
+  {
+    name: "Projects",
+    icon: Briefcase,
+    subItems: [
+      { name: "All Projects", href: "/dashboard/projects" },
+      { name: "Project Timeline", href: "/dashboard/projects/timeline" },
+    ],
+  },
   {
     name: "Payroll",
     icon: FileText,

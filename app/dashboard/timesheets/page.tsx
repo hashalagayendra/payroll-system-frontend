@@ -7,6 +7,18 @@ import { Timesheet, TimesheetResponse } from "../../../types/timesheet";
 import LogTimeModal from "./components/LogTimeModal";
 
 import EditTimeModal from "./components/EditTimeModal";
+import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+interface WeeklySummaryItem {
+  employee: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+  days: Record<string, number>;
+  total: number;
+}
 
 export default function TimesheetsPage() {
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
@@ -30,6 +42,25 @@ export default function TimesheetsPage() {
   const [isLogTimeModalOpen, setIsLogTimeModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTimesheet, setSelectedTimesheet] = useState<Timesheet | null>(null);
+  
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Weekly Summary State
+  const [weeklyData, setWeeklyData] = useState<WeeklySummaryItem[]>([]);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  
+  // Calculate current week's Monday
+  const getCurrentMonday = () => {
+    const d = new Date();
+    const day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
+    return monday.toISOString().split("T")[0];
+  };
+  const [weekStart, setWeekStart] = useState<string>(getCurrentMonday());
 
   // Fetch Filter Options
   useEffect(() => {
@@ -78,8 +109,30 @@ export default function TimesheetsPage() {
   }, [selectedEmployee, selectedProject, dateFrom, dateTo, billableFilter]);
 
   useEffect(() => {
-    fetchTimesheets();
-  }, [fetchTimesheets]);
+    if (viewMode === "list") {
+      fetchTimesheets();
+    }
+  }, [fetchTimesheets, viewMode]);
+
+  const fetchWeeklySummary = useCallback(async () => {
+    try {
+      setWeeklyLoading(true);
+      const response = await axiosInstance.get(`/api/timesheets/weekly?week_start=${weekStart}`);
+      if (response.data.success) {
+        setWeeklyData(response.data.data);
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch weekly summary", err);
+    } finally {
+      setWeeklyLoading(false);
+    }
+  }, [weekStart]);
+
+  useEffect(() => {
+    if (viewMode === "weekly") {
+      fetchWeeklySummary();
+    }
+  }, [fetchWeeklySummary, viewMode]);
 
   // Derived Metrics
   const metrics = useMemo(() => {
@@ -108,6 +161,30 @@ export default function TimesheetsPage() {
   const handleEditClick = (sheet: Timesheet) => {
     setSelectedTimesheet(sheet);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setDeletingId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      const response = await axiosInstance.delete(`/api/timesheets/${deletingId}`);
+      if (response.data.success) {
+        fetchTimesheets();
+        setIsDeleteModalOpen(false);
+        setDeletingId(null);
+      } else {
+        alert("Failed to delete timesheet entry.");
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || "An error occurred while deleting the entry.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -335,6 +412,7 @@ export default function TimesheetsPage() {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleDeleteClick(sheet.id)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Delete"
                           >
@@ -350,12 +428,105 @@ export default function TimesheetsPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-6 flex flex-col items-center justify-center min-h-[300px]">
-          <BarChart3 className="w-12 h-12 text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-700">Weekly Summary View</h3>
-          <p className="text-sm text-slate-500 mt-1 max-w-md text-center">
-            The weekly summary grouped by employee (Mon-Sun hours with totals) will be implemented here.
-          </p>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          {/* Weekly Summary Header */}
+          <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-slate-800">Weekly Summary</h3>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const d = new Date(weekStart);
+                  d.setDate(d.getDate() - 7);
+                  setWeekStart(d.toISOString().split("T")[0]);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <div className="text-sm font-medium text-slate-700 bg-white px-3 py-1.5 border border-slate-200 rounded-md shadow-sm">
+                Week of {new Date(weekStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+              <button
+                onClick={() => {
+                  const d = new Date(weekStart);
+                  d.setDate(d.getDate() + 7);
+                  setWeekStart(d.toISOString().split("T")[0]);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+          </div>
+
+          {/* Weekly Summary Table */}
+          {weeklyLoading ? (
+            <div className="p-8 text-center text-slate-500">Loading weekly summary...</div>
+          ) : weeklyData.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 flex flex-col items-center">
+              <BarChart3 className="w-12 h-12 text-slate-300 mb-4" />
+              <p>No hours logged for this week.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                    <th className="px-4 py-3 sticky left-0 bg-slate-50 z-10">Employee</th>
+                    {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
+                      const d = new Date(weekStart);
+                      d.setDate(d.getDate() + offset);
+                      return (
+                        <th key={offset} className="px-4 py-3 text-center min-w-[80px]">
+                          {d.toLocaleDateString(undefined, { weekday: 'short' })}
+                          <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                            {d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </div>
+                        </th>
+                      );
+                    })}
+                    <th className="px-4 py-3 text-center bg-slate-100/50">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {weeklyData.map((row, index) => (
+                    <tr key={row.employee?.id || index} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+                            {row.employee?.first_name?.charAt(0) || "U"}
+                          </div>
+                          <p className="font-semibold text-slate-800 whitespace-nowrap">
+                            {row.employee ? `${row.employee.first_name} ${row.employee.last_name}` : "Unknown"}
+                          </p>
+                        </div>
+                      </td>
+                      {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
+                        const d = new Date(weekStart);
+                        d.setDate(d.getDate() + offset);
+                        const dateStr = d.toISOString().split("T")[0];
+                        const hours = row.days[dateStr] || 0;
+                        return (
+                          <td key={offset} className="px-4 py-3 text-center text-slate-600">
+                            {hours > 0 ? (
+                              <span className="inline-block px-2 py-1 bg-slate-100 rounded text-slate-700 font-medium">
+                                {hours}h
+                              </span>
+                            ) : (
+                              <span className="text-slate-300">-</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-4 py-3 text-center bg-slate-50 font-bold text-slate-800">
+                        {row.total}h
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -377,6 +548,16 @@ export default function TimesheetsPage() {
         employees={employees}
         projects={projects}
         timesheet={selectedTimesheet}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingId(null);
+        }}
+        onConfirm={confirmDelete}
+        loading={isDeleting}
       />
     </div>
   );

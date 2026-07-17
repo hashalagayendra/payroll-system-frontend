@@ -6,6 +6,8 @@ import axiosInstance from "@/lib/axios";
 import { Timesheet, TimesheetResponse } from "../../../types/timesheet";
 import LogTimeModal from "./components/LogTimeModal";
 
+import EditTimeModal from "./components/EditTimeModal";
+
 export default function TimesheetsPage() {
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,6 +28,8 @@ export default function TimesheetsPage() {
 
   // Modal State
   const [isLogTimeModalOpen, setIsLogTimeModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedTimesheet, setSelectedTimesheet] = useState<Timesheet | null>(null);
 
   // Fetch Filter Options
   useEffect(() => {
@@ -99,6 +103,11 @@ export default function TimesheetsPage() {
     setDateFrom("");
     setDateTo("");
     setBillableFilter("All");
+  };
+
+  const handleEditClick = (sheet: Timesheet) => {
+    setSelectedTimesheet(sheet);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -319,6 +328,7 @@ export default function TimesheetsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
+                            onClick={() => handleEditClick(sheet)}
                             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
                             title="Edit"
                           >
@@ -355,6 +365,18 @@ export default function TimesheetsPage() {
         onSuccess={fetchTimesheets}
         employees={employees}
         projects={projects}
+      />
+
+      <EditTimeModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedTimesheet(null);
+        }}
+        onSuccess={fetchTimesheets}
+        employees={employees}
+        projects={projects}
+        timesheet={selectedTimesheet}
       />
     </div>
   );

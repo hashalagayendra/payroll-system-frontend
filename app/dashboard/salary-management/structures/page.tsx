@@ -28,10 +28,12 @@ interface SalaryStructure {
 export default function SalaryStructuresPage() {
   const [structures, setStructures] = useState<SalaryStructure[]>([]);
   const [designations, setDesignations] = useState<Designation[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterDepartmentId, setFilterDepartmentId] = useState<string>("");
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,9 +52,21 @@ export default function SalaryStructuresPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    fetchDepartments();
     fetchDesignations();
     fetchStructures();
   }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axiosInstance.get("/api/departments");
+      if (response.data.success) {
+        setDepartments(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch departments", error);
+    }
+  };
 
   const fetchDesignations = async () => {
     try {
@@ -170,10 +184,19 @@ export default function SalaryStructuresPage() {
   };
 
   const filteredStructures = structures.filter(s => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return s.designation?.title?.toLowerCase().includes(query) || 
-           s.designation?.department?.name?.toLowerCase().includes(query);
+    let matchesSearch = true;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      matchesSearch = !!(s.designation?.title?.toLowerCase().includes(query) || 
+             s.designation?.department?.name?.toLowerCase().includes(query));
+    }
+    
+    let matchesDepartment = true;
+    if (filterDepartmentId) {
+      matchesDepartment = s.designation?.department?.id === parseInt(filterDepartmentId);
+    }
+    
+    return matchesSearch && matchesDepartment;
   });
 
   return (
@@ -210,6 +233,19 @@ export default function SalaryStructuresPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all"
           />
+        </div>
+
+        <div className="w-full sm:max-w-xs">
+          <select
+            value={filterDepartmentId}
+            onChange={(e) => setFilterDepartmentId(e.target.value)}
+            className="w-full px-4 py-2 text-sm text-slate-900 bg-white border border-slate-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all outline-none"
+          >
+            <option value="">All Departments</option>
+            {departments.map(dept => (
+              <option key={dept.id} value={dept.id}>{dept.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Calculator, FileText, CheckCircle2, Clock, CheckCircle } from "lucide-react";
+import {
+  Calculator,
+  FileText,
+  CheckCircle2,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 import axiosInstance from "@/lib/axios";
 
 interface Branch {
@@ -41,7 +47,7 @@ export default function PayrollRunsPage() {
 
   const fetchBranches = async () => {
     try {
-      const response = await axiosInstance.get('/api/branches');
+      const response = await axiosInstance.get("/api/branches");
       if (response.data.success) {
         setBranches(response.data.data);
       }
@@ -54,11 +60,13 @@ export default function PayrollRunsPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (yearFilter) params.append('year', yearFilter);
-      if (branchFilter) params.append('branch_id', branchFilter);
-      if (statusFilter) params.append('status', statusFilter);
+      if (yearFilter) params.append("year", yearFilter);
+      if (branchFilter) params.append("branch_id", branchFilter);
+      if (statusFilter) params.append("status", statusFilter);
 
-      const response = await axiosInstance.get(`/api/payroll-runs?${params.toString()}`);
+      const response = await axiosInstance.get(
+        `/api/payroll-runs?${params.toString()}`,
+      );
       if (response.data.success) {
         setPayrollRuns(response.data.data);
       }
@@ -73,7 +81,7 @@ export default function PayrollRunsPage() {
     if (!monthNumber) return "";
     const date = new Date();
     date.setMonth(monthNumber - 1);
-    return date.toLocaleString('default', { month: 'long' });
+    return date.toLocaleString("default", { month: "long" });
   };
 
   const currentYear = new Date().getFullYear();
@@ -82,13 +90,16 @@ export default function PayrollRunsPage() {
   // Derived Stats
   const ytdTotal = useMemo(() => {
     return payrollRuns
-      .filter(r => r.year === currentYear)
+      .filter((r) => r.year === currentYear)
       .reduce((sum, run) => sum + Number(run.total_amount || 0), 0);
   }, [payrollRuns, currentYear]);
 
   const avgMonthly = useMemo(() => {
     if (payrollRuns.length === 0) return 0;
-    const total = payrollRuns.reduce((sum, run) => sum + Number(run.total_amount || 0), 0);
+    const total = payrollRuns.reduce(
+      (sum, run) => sum + Number(run.total_amount || 0),
+      0,
+    );
     return total / payrollRuns.length;
   }, [payrollRuns]);
 
@@ -113,20 +124,34 @@ export default function PayrollRunsPage() {
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-          <p className="text-sm font-semibold text-slate-500">YTD Payroll Processed (Current Year)</p>
+          <p className="text-sm font-semibold text-slate-500">
+            YTD Payroll Processed (Current Year)
+          </p>
           <h3 className="text-xl font-bold text-slate-800 mt-1">
-            ${ytdTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            $
+            {ytdTotal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </h3>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-          <p className="text-sm font-semibold text-slate-500">Avg Monthly Run (Displayed)</p>
+          <p className="text-sm font-semibold text-slate-500">
+            Avg Monthly Run (Displayed)
+          </p>
           <h3 className="text-xl font-bold text-slate-800 mt-1">
-            ${avgMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            $
+            {avgMonthly.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </h3>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <p className="text-sm font-semibold text-slate-500">Total Runs</p>
-          <h3 className="text-xl font-bold text-slate-800 mt-1">{payrollRuns.length}</h3>
+          <h3 className="text-xl font-bold text-slate-800 mt-1">
+            {payrollRuns.length}
+          </h3>
         </div>
       </div>
 
@@ -139,8 +164,10 @@ export default function PayrollRunsPage() {
             className="w-full text-sm text-slate-900 bg-white border border-slate-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
           >
             <option value="">All Years</option>
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>
@@ -151,8 +178,10 @@ export default function PayrollRunsPage() {
             className="w-full text-sm text-slate-900 bg-white border border-slate-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
           >
             <option value="">All Branches</option>
-            {branches.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
         </div>
@@ -188,19 +217,28 @@ export default function PayrollRunsPage() {
             <tbody className="divide-y divide-slate-100 text-sm">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-8 text-center text-slate-500"
+                  >
                     Loading payroll runs...
                   </td>
                 </tr>
               ) : payrollRuns.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-8 text-center text-slate-500"
+                  >
                     No payroll runs found matching the filters.
                   </td>
                 </tr>
               ) : (
                 payrollRuns.map((run) => (
-                  <tr key={run.id} className="hover:bg-slate-50 transition-colors group">
+                  <tr
+                    key={run.id}
+                    className="hover:bg-slate-50 transition-colors group"
+                  >
                     <td className="px-4 py-3">
                       <span className="font-semibold text-slate-800">
                         {getMonthName(run.month)} {run.year}
@@ -210,7 +248,9 @@ export default function PayrollRunsPage() {
                       {run.branch?.name || "-"}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
-                      {run.processed_at ? new Date(run.processed_at).toLocaleDateString() : "-"}
+                      {run.processed_at
+                        ? new Date(run.processed_at).toLocaleDateString()
+                        : "-"}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="inline-flex items-center justify-center px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold min-w-[2rem]">
@@ -218,17 +258,31 @@ export default function PayrollRunsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-slate-800">
-                      ${Number(run.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      $
+                      {Number(run.total_amount || 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-semibold tracking-wide ${
-                        run.status === "PAID" ? "bg-emerald-100 text-emerald-700" :
-                        run.status === "PROCESSED" ? "bg-blue-100 text-blue-700" :
-                        "bg-amber-100 text-amber-700"
-                      }`}>
-                        {run.status === "PAID" && <CheckCircle className="w-3 h-3" />}
-                        {run.status === "PROCESSED" && <CheckCircle2 className="w-3 h-3" />}
-                        {run.status === "DRAFT" && <Clock className="w-3 h-3" />}
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-semibold tracking-wide ${
+                          run.status === "PAID"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : run.status === "PROCESSED"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {run.status === "PAID" && (
+                          <CheckCircle className="w-3 h-3" />
+                        )}
+                        {run.status === "PROCESSED" && (
+                          <CheckCircle2 className="w-3 h-3" />
+                        )}
+                        {run.status === "DRAFT" && (
+                          <Clock className="w-3 h-3" />
+                        )}
                         {run.status}
                       </span>
                     </td>

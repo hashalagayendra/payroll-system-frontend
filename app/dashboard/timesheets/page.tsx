@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Clock, Plus, Search, Filter, Edit2, Trash2, Calendar, Briefcase, User, BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { Timesheet, TimesheetResponse } from "../../../types/timesheet";
+import LogTimeModal from "./components/LogTimeModal";
 
 export default function TimesheetsPage() {
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
@@ -22,6 +23,9 @@ export default function TimesheetsPage() {
   // Options for Dropdowns
   const [employees, setEmployees] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+
+  // Modal State
+  const [isLogTimeModalOpen, setIsLogTimeModalOpen] = useState(false);
 
   // Fetch Filter Options
   useEffect(() => {
@@ -111,6 +115,7 @@ export default function TimesheetsPage() {
           </p>
         </div>
         <button 
+          onClick={() => setIsLogTimeModalOpen(true)}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -343,6 +348,14 @@ export default function TimesheetsPage() {
           </p>
         </div>
       )}
+
+      <LogTimeModal
+        isOpen={isLogTimeModalOpen}
+        onClose={() => setIsLogTimeModalOpen(false)}
+        onSuccess={fetchTimesheets}
+        employees={employees}
+        projects={projects}
+      />
     </div>
   );
 }

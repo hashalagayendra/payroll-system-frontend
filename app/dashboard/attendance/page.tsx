@@ -10,7 +10,8 @@ import {
   AlertCircle,
   Loader2,
   Users,
-  BarChart3
+  BarChart3,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 import axiosInstance from "@/lib/axios";
@@ -52,6 +53,7 @@ export default function AttendancePage() {
 
   // Modal states
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -138,6 +140,32 @@ export default function AttendancePage() {
     }
   };
 
+  const exportToCsv = async () => {
+    try {
+      setIsExporting(true);
+      const dateObj = new Date(selectedDate);
+      const month = dateObj.getMonth() + 1;
+      const year = dateObj.getFullYear();
+      
+      const res = await axiosInstance.get(`/api/attendance/export?month=${month}&year=${year}`, {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `attendance_export_${year}_${month}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Failed to export attendance:", err);
+      alert("Failed to export attendance. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const getStatusBadge = (attendance: Attendance | undefined) => {
     if (!attendance) {
       return (
@@ -195,6 +223,14 @@ export default function AttendancePage() {
           <p className="text-sm text-slate-500 mt-1">Quickly mark and monitor employee attendance for any date.</p>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={exportToCsv}
+            disabled={isExporting}
+            className="inline-flex items-center px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+          >
+            {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-600" /> : <Download className="w-4 h-4 mr-2 text-slate-600" />}
+            Export to CSV
+          </button>
           <Link 
             href="/dashboard/attendance/summary"
             className="inline-flex items-center px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-colors"
